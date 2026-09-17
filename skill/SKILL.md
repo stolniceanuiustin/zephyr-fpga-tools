@@ -19,11 +19,13 @@ code edits).
 
 - `zfpga init` — interactive; asks the per-bench facts (SD target + console) and
   writes `<workspace>/.flash.local`. Run once per machine.
-- `zfpga new <board> <sample>` — scaffolds `zephyr/samples/<sample>/` from a
-  hello-world template and creates an empty `bitstreams/<sample>/` drop folder.
-- `zfpga flash <sample> [board]` — builds with west, loads the PL bitstream, and
-  copies the boot payload to the SD card. Board is taken from the arg or the
-  `.board` marker `new` wrote.
+- `zfpga new <board> <sample>` — registers a sample: creates the
+  `bitstreams/<sample>/` drop folder + `.board` marker. It does NOT scaffold a
+  Zephyr app; the user provides `zephyr/samples/<sample>` themselves.
+- `zfpga flash [-p auto|always|never] [-b <board>] <sample>` — builds with west,
+  loads the PL bitstream, and copies the boot payload to the SD card. `-p`/`-b`
+  mirror west (pristine, board); board also falls back to the `.board` marker
+  `new` wrote. A trailing positional board still works.
 
 ## Config model (do not conflate these)
 
@@ -32,7 +34,9 @@ code edits).
 - **<workspace>/.flash.local** — per-bench, git-ignored: `SD_MUX`, `SD_PART`,
   `SD_DIR`, `MNT`, `CONSOLE_HINT`, and the user's `BOOTBIN_<board>` paths.
 - **<workspace>/bitstreams/<sample>/** — the user's own `system_top.bit` (or
-  `.xsa`). Never shipped or committed.
+  `.xsa`), plus optionally `BOOT.BIN` (+ `u-boot.img` for an spl board)
+  co-located here. Never shipped or committed. `zfpga flash` looks here first for
+  the boot chain, then falls back to `BOOTBIN_<board>` in `.flash.local`.
 
 BOOT.BIN is a **user build**, never shipped — see `zfpga/docs/boot-chain.md`.
 
@@ -43,9 +47,9 @@ BOOT.BIN is a **user build**, never shipped — see `zfpga/docs/boot-chain.md`.
 2. **Bench config**: if `<workspace>/.flash.local` is missing, tell the user to
    run `zfpga init` (it is interactive — the user must answer, you cannot). Do not
    fabricate their SD device paths.
-3. **BOOT.BIN**: check `.flash.local` has `BOOTBIN_<board>=` for the target board.
-   If missing, point to `zfpga/docs/boot-chain.md` and have them set it. Do not
-   invent a path.
+3. **BOOT.BIN**: it may sit in `bitstreams/<sample>/BOOT.BIN` (checked first) or
+   come from `BOOTBIN_<board>=` in `.flash.local`. If neither exists, point to
+   `zfpga/docs/boot-chain.md` and have the user supply it. Do not invent a path.
 4. **Bitstream**: check `bitstreams/<sample>/system_top.bit` (or `.xsa`) exists.
    If missing, tell the user to drop their PL design there (see that folder's
    README). zfpga does not produce bitstreams.
@@ -55,7 +59,7 @@ BOOT.BIN is a **user build**, never shipped — see `zfpga/docs/boot-chain.md`.
 ## Guardrails
 
 - The flash step drives real hardware (SD mux, mounts, `sudo`). Confirm with the
-  user before running `zfpga flash`; it is not a dry run.
+  user before running `zfpga flash`.
 - `init` and any bitstream/BOOT.BIN paths are the user's to provide. Never guess
   device nodes, COM ports, or file paths — ask or have the user run `init`.
 - The SD target is chosen by a fallback ladder in `.flash.local`:

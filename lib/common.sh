@@ -40,17 +40,28 @@ load_bench() {
     MNT=${MNT:-/mnt}
 }
 
-# resolve_bootbin <board> -- set BOOTBIN (and UBOOT_IMG for an spl chain) from
-# the board-keyed paths in .flash.local. BOOT.BIN is a user build, not shipped;
-# see docs/boot-chain.md. Requires load_profile (BOOT_CHAIN) + load_bench first.
+# resolve_bootbin <board> <bitstream_dir> -- set BOOTBIN (and UBOOT_IMG for an
+# spl chain). Preference: co-located in the sample's bitstream folder, else the
+# board-keyed path in .flash.local. BOOT.BIN is a user build, not shipped; see
+# docs/boot-chain.md. Requires load_profile (BOOT_CHAIN) + load_bench first.
 resolve_bootbin() {
-    local board=$1 kb="BOOTBIN_$1" ku="UBOOT_IMG_$1"
-    BOOTBIN=${!kb:-${BOOTBIN:-}}
-    [ -n "$BOOTBIN" ] || die "no BOOT.BIN for '$board' -- set $kb in $BENCH_CONF (build it: see $TOOL_DIR/docs/boot-chain.md)"
-    [ -f "$BOOTBIN" ] || die "BOOT.BIN not found: $BOOTBIN (set $kb in $BENCH_CONF)"
+    local board=$1 bdir=$2 kb="BOOTBIN_$1" ku="UBOOT_IMG_$1"
+
+    if [ -f "$bdir/BOOT.BIN" ]; then
+        BOOTBIN="$bdir/BOOT.BIN"
+    else
+        BOOTBIN=${!kb:-${BOOTBIN:-}}
+    fi
+    [ -n "$BOOTBIN" ] || die "no BOOT.BIN for '$board' -- put one in $bdir/ or set $kb in $BENCH_CONF (build it: $TOOL_DIR/docs/boot-chain.md)"
+    [ -f "$BOOTBIN" ] || die "BOOT.BIN not found: $BOOTBIN"
+
     if [ "$BOOT_CHAIN" = spl ]; then
-        UBOOT_IMG=${!ku:-${UBOOT_IMG:-}}
-        [ -n "$UBOOT_IMG" ] || die "spl boot needs u-boot.img -- set $ku in $BENCH_CONF (see $TOOL_DIR/docs/boot-chain.md)"
-        [ -f "$UBOOT_IMG" ] || die "u-boot.img not found: $UBOOT_IMG (set $ku in $BENCH_CONF)"
+        if [ -f "$bdir/u-boot.img" ]; then
+            UBOOT_IMG="$bdir/u-boot.img"
+        else
+            UBOOT_IMG=${!ku:-${UBOOT_IMG:-}}
+        fi
+        [ -n "$UBOOT_IMG" ] || die "spl boot needs u-boot.img -- put one in $bdir/ or set $ku in $BENCH_CONF (see $TOOL_DIR/docs/boot-chain.md)"
+        [ -f "$UBOOT_IMG" ] || die "u-boot.img not found: $UBOOT_IMG"
     fi
 }

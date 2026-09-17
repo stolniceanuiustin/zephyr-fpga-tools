@@ -1,5 +1,0 @@
-/*
- * Datapath devicetree for @SAMPLE@ on @BOARD@.
- * Empty on purpose: hello-world needs no PL nodes. Add your SPI/JESD204/DMA/GPIO
- * nodes here as you bring the design up (this file is renamed to @BOARD@.overlay).
- */

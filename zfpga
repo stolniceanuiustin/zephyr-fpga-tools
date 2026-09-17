@@ -14,8 +14,11 @@ zfpga -- Zephyr-on-FPGA bring-up tooling
 
 Usage:
     zfpga init                       Configure this bench once (SD mux, console).
-    zfpga new <board> <sample>       Scaffold a hello-world sample for <board>.
-    zfpga flash <sample> [board]     Build <sample> and flash it with its PL bitstream.
+    zfpga new <board> <sample>       Register <sample> for <board>: create its
+                                     bitstreams/<sample>/ drop folder + board marker.
+    zfpga flash [-p auto|always|never] [-b <board>] <sample>
+                                     Build <sample> and flash it with its PL bitstream.
+                                     -p pristine mode, -b board (west-style flags).
     zfpga list                       List supported boards.
     zfpga help                       Show this help.
 

@@ -6,22 +6,39 @@
 # U-Boot (1) fpga-loads the bitstream, (2) stages zephyr.bin at its link addr,
 # (3) jumps with caches off. See profiles/<board>.env for the boot chain.
 
+# Flags mirror west's: -p <auto|always|never> (pristine), -b <board>. The sample
+# is positional; a trailing positional board still works for back-compat.
 cmd_flash() {
-    [ $# -ge 1 ] || die "usage: zfpga flash <sample> [board]"
-    local sample=$1 board=${2:-}
+    local sample="" board="" PRISTINE="${PRISTINE:-auto}"
+    while [ $# -gt 0 ]; do
+        case $1 in
+            -p|--pristine) PRISTINE=$2; shift 2 ;;
+            -p*)           PRISTINE=${1#-p}; shift ;;
+            -b|--board)    board=$2; shift 2 ;;
+            -b*)           board=${1#-b}; shift ;;
+            -h|--help)     die "usage: zfpga flash [-p auto|always|never] [-b <board>] <sample>" ;;
+            -*)            die "unknown flag: $1 (usage: zfpga flash [-p <mode>] [-b <board>] <sample>)" ;;
+            *) if [ -z "$sample" ]; then sample=$1
+               elif [ -z "$board" ]; then board=$1
+               else die "unexpected argument: $1"; fi
+               shift ;;
+        esac
+    done
+    [ -n "$sample" ] || die "usage: zfpga flash [-p auto|always|never] [-b <board>] <sample>"
+
     local sdir="$WS/zephyr/samples/$sample"
     local bdir="$WS/bitstreams/$sample"
     [ -d "$sdir" ] || die "sample not found: $sdir (run 'zfpga new')"
     [ -d "$bdir" ] || die "bitstream folder not found: $bdir (run 'zfpga new')"
 
-    # Board: explicit arg wins, else the marker written by 'zfpga new'.
+    # Board: explicit flag/arg wins, else the marker written by 'zfpga new'.
     [ -z "$board" ] && [ -f "$bdir/.board" ] && board=$(cat "$bdir/.board")
-    [ -n "$board" ] || die "no board given and no $bdir/.board marker -- pass it: zfpga flash $sample <board>"
+    [ -n "$board" ] || die "no board given and no $bdir/.board marker -- pass it: zfpga flash -b <board> $sample"
 
     load_profile "$board"           # BOARD BOOT_CHAIN BIT_LOAD RESET_HINT
     load_bench                      # SD_MUX SD_PART MNT CONSOLE_HINT + board-keyed boot paths
-    resolve_bootbin "$board"        # BOOTBIN [UBOOT_IMG] from .flash.local (user build)
-    local PRISTINE=${PRISTINE:-auto}
+    resolve_bootbin "$board" "$bdir" # BOOTBIN [UBOOT_IMG]: co-located in bdir, else .flash.local
+    info "boot chain: BOOTBIN=$BOOTBIN${UBOOT_IMG:+, UBOOT_IMG=$UBOOT_IMG}"
 
     cd "$WS" || die "cannot cd to workspace $WS"
     local BUILD=build/zephyr
