@@ -22,9 +22,10 @@ ln -s "$PWD/zfpga/zfpga" ~/.local/bin/zfpga   # optional: put it on PATH
 
 ```
 zfpga init                     # once per bench: SD mux, partition, console
-zfpga new zynqmp_apu myapp     # scaffold zephyr/samples/myapp + bitstreams/myapp
-# ... drop your system_top.bit into bitstreams/myapp/ (see its README) ...
+zfpga new zynqmp_apu myapp     # register myapp: make bitstreams/myapp + board marker
+# ... put your app in zephyr/samples/myapp, your bitstream in bitstreams/myapp/ ...
 zfpga flash myapp              # build + flash (board remembered from 'new')
+zfpga flash -p always -b zynqmp_apu myapp   # west-style flags: pristine + board
 ```
 
 No usbsdmux? Leave the mux blank in `zfpga init`; `flash` stages the SD-card
@@ -36,9 +37,11 @@ files and prints manual copy instructions instead.
   binaries are committed.
 - **Per-bench, git-ignored** — `../.flash.local` (SD mux/partition/console **and**
   your `BOOTBIN_<board>` paths), written by `zfpga init`.
-- **Yours to build/supply** — the boot chain (`BOOT.BIN`, +`u-boot.img` for
-  zedboard) built from U-Boot (see `docs/boot-chain.md`), and the PL bitstream
-  (`system_top.bit` or `.xsa`) per sample in `bitstreams/<sample>/`.
+- **Yours to build/supply**, all per sample in `bitstreams/<sample>/` — the PL
+  bitstream (`system_top.bit` or `.xsa`) **and** the boot chain (`BOOT.BIN`,
+  +`u-boot.img` for zedboard) built from U-Boot (see `docs/boot-chain.md`).
+  `zfpga flash` looks in that folder first; to share one boot chain across
+  samples instead, set `BOOTBIN_<board>` in `.flash.local`.
 
 ## Claude Code skill (optional)
 
@@ -56,6 +59,8 @@ Boot chain is `single` (one combined BOOT.BIN) or `spl` (BOOT.BIN + u-boot.img).
 
 ## Notes
 
+- Finding `SD_MUX` / `SD_PART` (and fixing them when the device node moves): see
+  `docs/sd-setup.md`.
 - Build BOOT.BIN from U-Boot with `fatload` + cache control (`CONFIG_CMD_CACHE`) +
   `boot.scr` autoboot, or the boot hangs — see `docs/boot-chain.md`.
 - Requires on PATH: `west`, `mkimage`, `unzip`, `readelf` (or
