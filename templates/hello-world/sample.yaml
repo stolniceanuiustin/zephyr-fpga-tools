@@ -1,0 +1,12 @@
+sample:
+  name: @SAMPLE@
+tests:
+  sample.@SAMPLE@:
+    platform_allow:
+      - @BOARD@
+    tags: introduction
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "@SAMPLE@ up on @BOARD@"

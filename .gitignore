@@ -1,0 +1,4 @@
+# zfpga is code + profiles + docs only. Runtime data lives in the workspace,
+# not here: bench config (../.flash.local), bitstreams (../bitstreams/), and
+# build output (../build/). Nothing generated is committed to this repo.
+*.swp

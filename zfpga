@@ -1,0 +1,37 @@
+#!/bin/bash
+# zfpga -- Zephyr-on-FPGA bring-up CLI (scaffold a sample, flash it with its PL
+# bitstream loaded). See `zfpga help`.
+set -euo pipefail
+
+TOOL_DIR=$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)
+export TOOL_DIR
+# shellcheck source=lib/common.sh
+source "$TOOL_DIR/lib/common.sh"
+
+usage() {
+    cat <<EOF
+zfpga -- Zephyr-on-FPGA bring-up tooling
+
+Usage:
+    zfpga init                       Configure this bench once (SD mux, console).
+    zfpga new <board> <sample>       Scaffold a hello-world sample for <board>.
+    zfpga flash <sample> [board]     Build <sample> and flash it with its PL bitstream.
+    zfpga list                       List supported boards.
+    zfpga help                       Show this help.
+
+Supported boards: $(list_boards | paste -sd, -)
+
+Workspace is the parent of this tool dir ($WS), override with ZFPGA_WS.
+EOF
+}
+
+[ $# -ge 1 ] || { usage; exit 1; }
+cmd=$1; shift
+case "$cmd" in
+init)   source "$TOOL_DIR/lib/cmd_init.sh";  cmd_init  "$@" ;;
+new)    source "$TOOL_DIR/lib/cmd_new.sh";   cmd_new   "$@" ;;
+flash)  source "$TOOL_DIR/lib/cmd_flash.sh"; cmd_flash "$@" ;;
+list)   list_boards ;;
+help|-h|--help) usage ;;
+*)      die "unknown command '$cmd' (try 'zfpga help')" ;;
+esac
