@@ -40,6 +40,15 @@ files and prints manual copy instructions instead.
   zedboard) built from U-Boot (see `docs/boot-chain.md`), and the PL bitstream
   (`system_top.bit` or `.xsa`) per sample in `bitstreams/<sample>/`.
 
+## Claude Code skill (optional)
+
+`skill/SKILL.md` teaches Claude Code to drive or explain zfpga. To activate it,
+copy it into your skills dir:
+
+```
+mkdir -p .claude/skills/zfpga && cp zfpga/skill/SKILL.md .claude/skills/zfpga/
+```
+
 ## Add a board
 
 Data only, no script edits: add `profiles/<board>.env` and `boot/<board>/`.
