@@ -11,8 +11,8 @@ Supported boards: **zynqmp_apu** (ZCU102 / ZynqMP-A53), **zedboard** (Zynq-7000-
 Clone this repo into your west workspace root (next to `zephyr/`):
 
 ```
-cd ~/ZephyrOpensource        # your west workspace
-git clone <url> zfpga
+cd ~/Zephyr                # your west workspace
+git clone https://github.com/stolniceanuiustin/zephyr-fpga-tools zfpga
 ln -s "$PWD/zfpga/zfpga" ~/.local/bin/zfpga   # optional: put it on PATH
 ```
 
