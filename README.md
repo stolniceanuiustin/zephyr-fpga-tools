@@ -45,11 +45,13 @@ files and prints manual copy instructions instead.
 
 ## Claude Code skill (optional)
 
-`skill/SKILL.md` teaches Claude Code to drive or explain zfpga. To activate it,
-copy it into your skills dir:
+`skills/` ships Claude Code skills: `zfpga` (drive/explain the tool) and
+per-board sample skills (e.g. `zynqmp-sample`). Activate any of them by copying
+into your skills dir:
 
 ```
-mkdir -p .claude/skills/zfpga && cp zfpga/skill/SKILL.md .claude/skills/zfpga/
+cp -r zfpga/skills/zfpga         .claude/skills/
+cp -r zfpga/skills/zynqmp-sample .claude/skills/
 ```
 
 ## Add a board

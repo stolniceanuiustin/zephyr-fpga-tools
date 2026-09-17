@@ -19,6 +19,7 @@ Usage:
     zfpga flash [-p auto|always|never] [-b <board>] <sample>
                                      Build <sample> and flash it with its PL bitstream.
                                      -p pristine mode, -b board (west-style flags).
+    zfpga doctor                     Preflight the bench: tools, config, SD target.
     zfpga list                       List supported boards.
     zfpga help                       Show this help.
 
@@ -34,6 +35,7 @@ case "$cmd" in
 init)   source "$TOOL_DIR/lib/cmd_init.sh";  cmd_init  "$@" ;;
 new)    source "$TOOL_DIR/lib/cmd_new.sh";   cmd_new   "$@" ;;
 flash)  source "$TOOL_DIR/lib/cmd_flash.sh"; cmd_flash "$@" ;;
+doctor) source "$TOOL_DIR/lib/cmd_doctor.sh"; cmd_doctor "$@" ;;
 list)   list_boards ;;
 help|-h|--help) usage ;;
 *)      die "unknown command '$cmd' (try 'zfpga help')" ;;
