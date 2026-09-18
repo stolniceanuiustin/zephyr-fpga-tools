@@ -40,6 +40,13 @@ cmd_init() {
     fi
 
     read -rp "Console hint shown after flashing (e.g. COM13 @115200 8N1): " console
+    echo
+    echo "For 'zfpga console' to attach directly, give the Linux serial device."
+    read -rp "Console serial device (e.g. /dev/ttyUSB0, blank = none): " console_dev
+    local console_baud=""
+    if [ -n "$console_dev" ]; then
+        read -rp "Console baud [115200]: " console_baud; console_baud=${console_baud:-115200}
+    fi
 
     umask 077
     cat > "$BENCH_CONF" <<EOF
@@ -50,6 +57,9 @@ SD_PART="$sd_part"
 SD_DIR="$sd_dir"
 MNT="$mnt"
 CONSOLE_HINT="$console"
+# Real serial device for 'zfpga console' (attach + tee a boot log).
+CONSOLE_DEV="$console_dev"
+CONSOLE_BAUD="$console_baud"
 
 # BOOT.BIN is a user build (not shipped) -- point at yours per board.
 # Build instructions: zfpga/docs/boot-chain.md

@@ -19,6 +19,12 @@ Usage:
     zfpga flash [-p auto|always|never] [-b <board>] <sample>
                                      Build <sample> and flash it with its PL bitstream.
                                      -p pristine mode, -b board (west-style flags).
+    zfpga console [-d <dev>] [-b <baud>] [--no-log] [sample]
+                                     Attach to the board UART and tee a
+                                     timestamped boot log to logs/. Device/baud
+                                     default to CONSOLE_DEV/CONSOLE_BAUD (zfpga init).
+    zfpga logs [clean [--keep N]]    List captured boot logs, or clean them
+                                     (keep the N newest with --keep).
     zfpga doctor                     Preflight the bench: tools, config, SD target.
     zfpga list                       List supported boards.
     zfpga help                       Show this help.
@@ -35,6 +41,8 @@ case "$cmd" in
 init)   source "$TOOL_DIR/lib/cmd_init.sh";  cmd_init  "$@" ;;
 new)    source "$TOOL_DIR/lib/cmd_new.sh";   cmd_new   "$@" ;;
 flash)  source "$TOOL_DIR/lib/cmd_flash.sh"; cmd_flash "$@" ;;
+console) source "$TOOL_DIR/lib/cmd_console.sh"; cmd_console "$@" ;;
+logs)   source "$TOOL_DIR/lib/cmd_logs.sh"; cmd_logs "$@" ;;
 doctor) source "$TOOL_DIR/lib/cmd_doctor.sh"; cmd_doctor "$@" ;;
 list)   list_boards ;;
 help|-h|--help) usage ;;

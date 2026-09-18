@@ -30,6 +30,11 @@ cmd_doctor() {
     fi
     _report_tool usbsdmux optional "only needed for the SD-mux flash path"
     _report_tool sudo     optional "needed to mount the card / drive the mux"
+    if _have tio || _have screen || _have picocom; then
+        echo "  ok       serial terminal ($(for t in tio screen picocom; do _have $t && { echo $t; break; }; done)) for 'zfpga console'"
+    else
+        echo "  absent   serial terminal (optional) -- install tio/screen/picocom for 'zfpga console'"
+    fi
 
     info "workspace:"
     echo "  ok       zephyr/ at $WS/zephyr"          # validated when common.sh sourced
@@ -57,6 +62,12 @@ cmd_doctor() {
             [ -d "$SD_DIR" ] || echo "  WARN     SD_DIR $SD_DIR is not a directory (card mounted?)"
         else
             echo "  sd path  none -- 'flash' will stage files in build/sdcard/ for manual copy"
+        fi
+        if [ -n "${CONSOLE_DEV:-}" ]; then
+            echo "  console  $CONSOLE_DEV @ ${CONSOLE_BAUD:-115200}"
+            [ -c "$CONSOLE_DEV" ] || echo "  WARN     CONSOLE_DEV $CONSOLE_DEV not present (board off/unplugged?)"
+        else
+            echo "  console  no CONSOLE_DEV set -- 'zfpga console' needs -d or 'zfpga init'"
         fi
     fi
 
