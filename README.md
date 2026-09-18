@@ -3,6 +3,11 @@
 Zephyr-on-FPGA bring-up CLI: scaffold a board sample and flash it to the SD card
 with its PL bitstream loaded first, so PL/AXI peripherals are alive before Zephyr
 touches them. Pure bash — clone it, no build step.
+Uses U-BOOT for loading the FPGA. Loading from Zephyr is not an option at this time 
+due to design-constraints on Zephyr's part. 
+
+This can be used with or without an USBSDMUX - An SD Mux makes your live much easier 
+but you can use this with just an SD Card. 
 
 Supported boards: **zynqmp_apu** (ZCU102 / ZynqMP-A53), **zedboard** (Zynq-7000-A9).
 
@@ -15,17 +20,26 @@ cd ~/Zephyr                # your west workspace
 git clone https://github.com/stolniceanuiustin/zephyr-fpga-tools zfpga
 ln -s "$PWD/zfpga/zfpga" ~/.local/bin/zfpga   # optional: put it on PATH
 ```
-
+Your workspace should look like this:
+```
+Zephyr/zephyr
+Zephyr/zfpga
+Zephyr/.venv
+Zephyr/.west
+etc.
+```
 `zfpga` treats its parent dir as the workspace. Override with `ZFPGA_WS`.
 
 ## Use
 
+### Init, register sample, build, flash 
 ```
 zfpga init                     # once per bench: SD mux, partition, console
 zfpga new zynqmp_apu myapp     # register myapp: make bitstreams/myapp + board marker
 # ... put your app in zephyr/samples/myapp, your bitstream in bitstreams/myapp/ ...
 zfpga flash myapp              # build + flash (board remembered from 'new')
 zfpga flash -p always -b zynqmp_apu myapp   # west-style flags: pristine + board
+zfpga console myapp            # launch a console with automatic logging at the end 
 ```
 
 No usbsdmux? Leave the mux blank in `zfpga init`; `flash` stages the SD-card
@@ -65,5 +79,5 @@ Boot chain is `single` (one combined BOOT.BIN) or `spl` (BOOT.BIN + u-boot.img).
   `docs/sd-setup.md`.
 - Build BOOT.BIN from U-Boot with `fatload` + cache control (`CONFIG_CMD_CACHE`) +
   `boot.scr` autoboot, or the boot hangs — see `docs/boot-chain.md`.
-- Requires on PATH: `west`, `mkimage`, `unzip`, `readelf` (or
-  `aarch64-zephyr-elf-readelf`), and `usbsdmux` + `sudo` for the mux path.
+- Requires on PATH: `west`, `mkimage`, `unzip`, `readelf`, (or
+  `aarch64-zephyr-elf-readelf`), `tio`, `usbsdmux` + `sudo` for the mux path.
