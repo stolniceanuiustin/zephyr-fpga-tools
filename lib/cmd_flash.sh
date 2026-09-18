@@ -10,14 +10,16 @@
 # is positional; a trailing positional board still works for back-compat.
 cmd_flash() {
     local sample="" board="" PRISTINE="${PRISTINE:-auto}"
+    local west_extra=()             # everything after '--' -> west build CMake args
     while [ $# -gt 0 ]; do
         case $1 in
+            --)            shift; west_extra=("$@"); break ;;
             -p|--pristine) PRISTINE=$2; shift 2 ;;
             -p*)           PRISTINE=${1#-p}; shift ;;
             -b|--board)    board=$2; shift 2 ;;
             -b*)           board=${1#-b}; shift ;;
-            -h|--help)     die "usage: zfpga flash [-p auto|always|never] [-b <board>] <sample>" ;;
-            -*)            die "unknown flag: $1 (usage: zfpga flash [-p <mode>] [-b <board>] <sample>)" ;;
+            -h|--help)     die "usage: zfpga flash [-p auto|always|never] [-b <board>] <sample> [-- <west/cmake args>]" ;;
+            -*)            die "unknown flag: $1 (usage: zfpga flash [-p <mode>] [-b <board>] <sample> [-- <west/cmake args>])" ;;
             *) if [ -z "$sample" ]; then sample=$1
                elif [ -z "$board" ]; then board=$1
                else die "unexpected argument: $1"; fi
@@ -47,8 +49,8 @@ cmd_flash() {
 
     # --- Build --- (BOARD comes from the sourced profile, not a typo of $board)
     # shellcheck disable=SC2153
-    info "building $sdir for $BOARD (pristine=$PRISTINE) ..."
-    west build -p "$PRISTINE" -b "$BOARD" -d build "zephyr/samples/$sample"
+    info "building $sdir for $BOARD (pristine=$PRISTINE)${west_extra:+ -- ${west_extra[*]}} ..."
+    west build -p "$PRISTINE" -b "$BOARD" -d build "zephyr/samples/$sample" ${west_extra:+-- "${west_extra[@]}"}
 
     # --- PL bitstream: prefer shipped .bit; else extract from the XSA (a zip). ---
     if [ ! -f "$BIT" ] || { [ -f "$XSA" ] && [ "$XSA" -nt "$BIT" ]; }; then

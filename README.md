@@ -39,11 +39,16 @@ zfpga new zynqmp_apu myapp     # register myapp: make bitstreams/myapp + board m
 # ... put your app in zephyr/samples/myapp, your bitstream in bitstreams/myapp/ ...
 zfpga flash myapp              # build + flash (board remembered from 'new')
 zfpga flash -p always -b zynqmp_apu myapp   # west-style flags: pristine + board
+zfpga flash myapp -- -DEXTRA_CONF_FILE=debug.conf  # args after -- go to west build (CMake -D)
 zfpga console myapp            # launch a console with automatic logging at the end 
 ```
 
 No usbsdmux? Leave the mux blank in `zfpga init`; `flash` stages the SD-card
 files and prints manual copy instructions instead.
+
+Anything after `--` on `zfpga flash` is passed straight to `west build`, so you
+can add CMake defines or extra config — e.g. `-- -DEXTRA_CONF_FILE=debug.conf` or
+`-- -DMY_OPTION=/path/to/file`. Paths with spaces are preserved.
 
 ## SD card
 

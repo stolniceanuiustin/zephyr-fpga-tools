@@ -16,9 +16,11 @@ Usage:
     zfpga init                       Configure this bench once (SD mux, console).
     zfpga new <board> <sample>       Register <sample> for <board>: create its
                                      bitstreams/<sample>/ drop folder + board marker.
-    zfpga flash [-p auto|always|never] [-b <board>] <sample>
+    zfpga flash [-p auto|always|never] [-b <board>] <sample> [-- <args>]
                                      Build <sample> and flash it with its PL bitstream.
                                      -p pristine mode, -b board (west-style flags).
+                                     Args after '--' pass to west build (e.g.
+                                     -- -DEXTRA_CONF_FILE=debug.conf).
     zfpga console [-d <dev>] [-b <baud>] [--no-log] [sample]
                                      Attach to the board UART and tee a
                                      timestamped boot log to logs/. Device/baud
