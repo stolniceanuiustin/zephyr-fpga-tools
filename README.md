@@ -45,6 +45,17 @@ zfpga console myapp            # launch a console with automatic logging at the 
 No usbsdmux? Leave the mux blank in `zfpga init`; `flash` stages the SD-card
 files and prints manual copy instructions instead.
 
+## SD card
+
+The card needs **one FAT32 boot partition** (the standard Zynq/ZynqMP first
+partition). `zfpga` does **not** partition or format the card — do that once
+yourself (`mkfs.vfat`), then point `zfpga init` at that partition.
+
+It does **not** need to be empty. `flash` only copies files into that partition;
+it overwrites `BOOT.BIN`, `boot.scr`, `system.bit`, and `zephyr.bin`, and backs
+up any existing `boot.scr` to `boot.scr.linux` (so a stock PetaLinux card can be
+restored). Everything else on the card is left untouched.
+
 ## What ships vs. what's yours
 
 - **Shared, versioned** — `profiles/<board>.env` (board constants) only. No
