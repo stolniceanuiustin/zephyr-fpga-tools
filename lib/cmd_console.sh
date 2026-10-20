@@ -25,10 +25,17 @@ cmd_console() {
     done
 
     load_bench                       # CONSOLE_DEV CONSOLE_BAUD CONSOLE_HINT
-    dev=${dev:-${CONSOLE_DEV:-}}
     baud=${baud:-${CONSOLE_BAUD:-115200}}
 
-    [ -n "$dev" ] || die "no console device -- pass -d /dev/ttyUSB0 or set CONSOLE_DEV in $BENCH_CONF (zfpga init).${CONSOLE_HINT:+ Hint: $CONSOLE_HINT}"
+    # No -d: first present of CONSOLE_DEV, /dev/ttyUSB0, /dev/ttyACM0.
+    if [ -z "$dev" ]; then
+        local c
+        for c in ${CONSOLE_DEV:-} /dev/ttyUSB0 /dev/ttyACM0; do
+            [ -c "$c" ] && { dev=$c; break; }
+        done
+        [ -n "$dev" ] || die "no console device found (tried ${CONSOLE_DEV:+$CONSOLE_DEV, }/dev/ttyUSB0, /dev/ttyACM0) -- pass -d <dev> or set CONSOLE_DEV in $BENCH_CONF (zfpga init).${CONSOLE_HINT:+ Hint: $CONSOLE_HINT}"
+        [ "$dev" = "${CONSOLE_DEV:-}" ] || info "CONSOLE_DEV${CONSOLE_DEV:+ $CONSOLE_DEV} not present, using $dev"
+    fi
     [ -e "$dev" ] || die "console device not found: $dev${CONSOLE_HINT:+ (bench hint: $CONSOLE_HINT)}"
     [ -c "$dev" ] || die "not a character device: $dev"
     if [ ! -r "$dev" ] || [ ! -w "$dev" ]; then

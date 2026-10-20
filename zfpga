@@ -30,7 +30,8 @@ Usage:
     zfpga console [-d <dev>] [-b <baud>] [--no-log] [sample]
                                      Attach to the board UART and tee a
                                      timestamped boot log to logs/. Device/baud
-                                     default to CONSOLE_DEV/CONSOLE_BAUD (zfpga init).
+                                     default to CONSOLE_DEV/CONSOLE_BAUD (zfpga init);
+                                     falls back to /dev/ttyUSB0, then /dev/ttyACM0.
     zfpga logs [clean [--keep N]]    List captured boot logs, or clean them
                                      (keep the N newest with --keep).
     zfpga doctor                     Preflight the bench: tools, config, SD target.
