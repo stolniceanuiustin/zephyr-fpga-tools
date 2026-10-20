@@ -23,11 +23,14 @@ code edits).
   `bitstreams/<sample>/` drop folder + `.board` marker (+ `.sample` with
   `<path>` if given). It does NOT scaffold a Zephyr app; the user provides
   `zephyr/samples/<sample>` (or `<path>`) themselves.
-- `zfpga flash [-p auto|always|never] [-b <board>] [-S <snippet>] <sample|path>
-  [-- <cmake args>]` — builds with west, loads the PL bitstream, and copies the
+- `zfpga flash [-p auto|always|never] [-b <board>] [-S <snippet>] [-n]
+  <sample|path> [-- <cmake args>]` — builds with west, loads the PL bitstream, and copies the
   boot payload to the SD card. `-p`/`-b`/`-S` mirror west (pristine, board,
   snippet); board also falls back to the `.board` marker `new` wrote. A
-  trailing positional board still works.
+  trailing positional board still works. `-n` skips the PL bitstream (PS-only
+  apps such as `net/zperf`): `bitstreams/<sample>/` becomes optional and, if
+  absent, BOOT.BIN/u-boot.img come from `BOOTBIN_<board>`/`UBOOT_IMG_<board>`
+  in `.flash.local`.
 
 ## Config model (do not conflate these)
 

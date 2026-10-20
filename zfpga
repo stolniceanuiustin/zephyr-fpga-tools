@@ -19,11 +19,12 @@ Usage:
                                      bitstreams/<sample>/ drop folder + board marker.
                                      <path> records an app outside zephyr/samples/
                                      (e.g. modules/lib/libiio/zephyr/samples/iiod).
-    zfpga flash [-p auto|always|never] [-b <board>] [-S <snippet>] <sample|path> [-- <args>]
+    zfpga flash [-p auto|always|never] [-b <board>] [-S <snippet>] [-n] <sample|path> [-- <args>]
                                      Build <sample> and flash it with its PL bitstream.
                                      -p pristine mode, -b board, -S snippet (west-style
                                      flags). A path builds that app; its basename
-                                     names the bitstreams/ folder.
+                                     names the bitstreams/ folder. -n boots
+                                     without a PL bitstream (PS-only apps).
                                      Args after '--' pass to west build (e.g.
                                      -- -DEXTRA_CONF_FILE=debug.conf).
     zfpga console [-d <dev>] [-b <baud>] [--no-log] [sample]
