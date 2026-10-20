@@ -1,11 +1,18 @@
-# zfpga new <board> <sample> -- register a sample for flashing: create its
-# bitstream drop folder and remember the board. Does NOT scaffold a Zephyr app;
-# you bring your own zephyr/samples/<sample>.
+# zfpga new <board> <sample> [<path>] -- register a sample for flashing: create
+# its bitstream drop folder and remember the board. Does NOT scaffold a Zephyr
+# app; you bring your own, at zephyr/samples/<sample> or at <path> (recorded in
+# .sample so 'zfpga flash <sample>' finds it, e.g. a module's sample).
 
 cmd_new() {
-    [ $# -eq 2 ] || die "usage: zfpga new <board> <sample>"
+    [ $# -eq 2 ] || [ $# -eq 3 ] || die "usage: zfpga new <board> <sample> [<path>]"
     local board=$1 sample=$2
     load_profile "$board"            # validates board, sets REQUIRED_ARTIFACTS
+    [[ $sample != */* ]] || die "<sample> is a name, not a path -- pass the path third: zfpga new $board $(basename "$sample") $sample"
+    if [ $# -eq 3 ]; then
+        resolve_sample "$3"          # validates the path, SAMPLE_DIR relative to $WS
+    else
+        resolve_sample "$sample"
+    fi
 
     local bdir="$WS/bitstreams/$sample"
     [ -e "$bdir" ] && die "bitstream folder already exists: $bdir"
@@ -13,6 +20,7 @@ cmd_new() {
     # --- Bitstream folder + board marker + a README of what to drop in. ---
     mkdir -p "$bdir"
     echo "$board" > "$bdir/.board"          # remembered by 'zfpga flash <sample>'
+    [ $# -eq 3 ] && echo "$SAMPLE_DIR" > "$bdir/.sample"
     cat > "$bdir/README.md" <<EOF
 # Boot files for '$sample' ($board)
 
@@ -26,19 +34,20 @@ zfpga looks here first for BOOT.BIN$( [ "$BOOT_CHAIN" = spl ] && echo "/u-boot.i
 boot chain across samples, omit it here and set BOOTBIN_$board$( [ "$BOOT_CHAIN" = spl ] && echo "/UBOOT_IMG_$board")
 in .flash.local instead.
 
-The Zephyr app is yours: it must live at zephyr/samples/$sample.
+The Zephyr app is yours: zfpga builds $SAMPLE_DIR.
 Then: \`zfpga flash $sample\`
 EOF
     info "registered '$sample' for $board -> $bdir (see its README for the files to add)"
 
     # A soft nudge if the matching sample isn't there yet (1:1 naming).
-    [ -d "$WS/zephyr/samples/$sample" ] || \
-        warn "no zephyr/samples/$sample yet -- add your Zephyr app there before flashing."
+    local sdir=$SAMPLE_DIR
+    [[ $sdir == /* ]] || sdir="$WS/$sdir"
+    [ -d "$sdir" ] || warn "no $SAMPLE_DIR yet -- add your Zephyr app there before flashing."
 
     echo
     info "next:"
     echo "  1. Put your bitstream in: bitstreams/$sample/  (see its README.md)"
-    echo "  2. Make sure your app is at: zephyr/samples/$sample"
+    echo "  2. Make sure your app is at: $SAMPLE_DIR"
     echo "  3. Run 'zfpga init' if you haven't configured this bench yet."
     echo "  4. zfpga flash $sample"
 }

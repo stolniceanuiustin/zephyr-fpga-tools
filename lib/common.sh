@@ -40,6 +40,31 @@ load_bench() {
     MNT=${MNT:-/mnt}
 }
 
+# resolve_sample <arg> -- set SAMPLE (name, keys bitstreams/<name>/) and
+# SAMPLE_DIR (app dir, relative to $WS when inside it). <arg> is either:
+#   - a path (contains '/'): taken relative to $PWD, else to $WS; the name is
+#     its basename, e.g. modules/lib/libiio/zephyr/samples/iiod -> iiod.
+#   - a bare name: the path recorded in bitstreams/<name>/.sample by
+#     'zfpga new', else zephyr/samples/<name>.
+resolve_sample() {
+    local arg=${1%/} abs=""
+    if [[ $arg == */* ]]; then
+        if [ -d "$arg" ]; then abs=$(realpath "$arg")
+        elif [ -d "$WS/$arg" ]; then abs=$(realpath "$WS/$arg")
+        else die "sample dir not found: $arg (relative to $PWD or $WS)"; fi
+        SAMPLE=$(basename "$abs")
+    else
+        SAMPLE=$arg
+        if [ -f "$WS/bitstreams/$SAMPLE/.sample" ]; then
+            abs=$(cat "$WS/bitstreams/$SAMPLE/.sample")
+            [[ $abs == /* ]] || abs="$WS/$abs"
+        else
+            abs="$WS/zephyr/samples/$SAMPLE"
+        fi
+    fi
+    SAMPLE_DIR=${abs#"$WS"/}
+}
+
 # resolve_bootbin <board> <bitstream_dir> -- set BOOTBIN (and UBOOT_IMG for an
 # spl chain). Preference: co-located in the sample's bitstream folder, else the
 # board-keyed path in .flash.local. BOOT.BIN is a user build, not shipped; see

@@ -19,13 +19,15 @@ code edits).
 
 - `zfpga init` — interactive; asks the per-bench facts (SD target + console) and
   writes `<workspace>/.flash.local`. Run once per machine.
-- `zfpga new <board> <sample>` — registers a sample: creates the
-  `bitstreams/<sample>/` drop folder + `.board` marker. It does NOT scaffold a
-  Zephyr app; the user provides `zephyr/samples/<sample>` themselves.
-- `zfpga flash [-p auto|always|never] [-b <board>] <sample>` — builds with west,
-  loads the PL bitstream, and copies the boot payload to the SD card. `-p`/`-b`
-  mirror west (pristine, board); board also falls back to the `.board` marker
-  `new` wrote. A trailing positional board still works.
+- `zfpga new <board> <sample> [<path>]` — registers a sample: creates the
+  `bitstreams/<sample>/` drop folder + `.board` marker (+ `.sample` with
+  `<path>` if given). It does NOT scaffold a Zephyr app; the user provides
+  `zephyr/samples/<sample>` (or `<path>`) themselves.
+- `zfpga flash [-p auto|always|never] [-b <board>] [-S <snippet>] <sample|path>
+  [-- <cmake args>]` — builds with west, loads the PL bitstream, and copies the
+  boot payload to the SD card. `-p`/`-b`/`-S` mirror west (pristine, board,
+  snippet); board also falls back to the `.board` marker `new` wrote. A
+  trailing positional board still works.
 
 ## Config model (do not conflate these)
 
@@ -65,8 +67,10 @@ BOOT.BIN is a **user build**, never shipped — see `zfpga/docs/boot-chain.md`.
 - The SD target is chosen by a fallback ladder in `.flash.local`:
   `SD_MUX`+`SD_PART` → `SD_PART` (host reader, zfpga mounts) → `SD_DIR` (already
   mounted) → none (files staged in `build/sdcard/` for manual copy).
-- zfpga assumes `samples/<name>` and `bitstreams/<name>` share the name (1:1). A
-  sample whose dir differs from its bitstream folder is not supported as-is.
+- A bare `<sample>` name builds `zephyr/samples/<name>`. For an app elsewhere
+  (e.g. a module's `modules/lib/libiio/zephyr/samples/iiod`), pass its path to
+  `zfpga flash` (bitstream folder = basename), or record it once with
+  `zfpga new <board> <name> <path>` (stored in `bitstreams/<name>/.sample`).
 
 ## Teach-only mode
 

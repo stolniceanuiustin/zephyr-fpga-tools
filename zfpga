@@ -14,11 +14,16 @@ zfpga -- Zephyr-on-FPGA bring-up tooling
 
 Usage:
     zfpga init                       Configure this bench once (SD mux, console).
-    zfpga new <board> <sample>       Register <sample> for <board>: create its
+    zfpga new <board> <sample> [<path>]
+                                     Register <sample> for <board>: create its
                                      bitstreams/<sample>/ drop folder + board marker.
-    zfpga flash [-p auto|always|never] [-b <board>] <sample> [-- <args>]
+                                     <path> records an app outside zephyr/samples/
+                                     (e.g. modules/lib/libiio/zephyr/samples/iiod).
+    zfpga flash [-p auto|always|never] [-b <board>] [-S <snippet>] <sample|path> [-- <args>]
                                      Build <sample> and flash it with its PL bitstream.
-                                     -p pristine mode, -b board (west-style flags).
+                                     -p pristine mode, -b board, -S snippet (west-style
+                                     flags). A path builds that app; its basename
+                                     names the bitstreams/ folder.
                                      Args after '--' pass to west build (e.g.
                                      -- -DEXTRA_CONF_FILE=debug.conf).
     zfpga console [-d <dev>] [-b <baud>] [--no-log] [sample]
