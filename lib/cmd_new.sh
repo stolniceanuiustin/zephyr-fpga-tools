@@ -14,7 +14,7 @@ cmd_new() {
         resolve_sample "$sample"
     fi
 
-    local bdir="$WS/bitstreams/$sample"
+    local bdir="$BS_DIR/$sample"
     [ -e "$bdir" ] && die "bitstream folder already exists: $bdir"
 
     # --- Bitstream folder + board marker + a README of what to drop in. ---

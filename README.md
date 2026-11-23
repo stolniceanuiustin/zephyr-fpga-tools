@@ -50,6 +50,25 @@ Anything after `--` on `zfpga flash` is passed straight to `west build`, so you
 can add CMake defines or extra config — e.g. `-- -DEXTRA_CONF_FILE=debug.conf` or
 `-- -DMY_OPTION=/path/to/file`. Paths with spaces are preserved.
 
+## Use as a submodule of an app repo
+
+zfpga also works nested inside an app repo that lives in a west workspace:
+
+```
+ws/zephyr/  ws/.west/
+ws/my-app/              (app repo, west manifest repo)
+ws/my-app/tools/zfpga   (this repo, as a submodule)
+ws/my-app/bitstreams/<sample>/   BOOT.BIN u-boot.img system_top.bit .board .sample
+```
+
+- The workspace is the nearest ancestor of `zfpga/` that has a `zephyr/` dir
+  (override: `ZFPGA_WS`).
+- Drop folders come from `$ZFPGA_BITSTREAMS`, else the parent repo's
+  `bitstreams/` if it exists, else `$WS/bitstreams`.
+- `bitstreams/<sample>/.sample` may be a path relative to the workspace or to
+  the parent repo (e.g. `app`).
+- `.flash.local` (per-bench) stays in the workspace root.
+
 ## SD card
 
 The card needs **one FAT32 boot partition** (the standard Zynq/ZynqMP first

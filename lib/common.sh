@@ -1,11 +1,31 @@
 # Shared helpers for zfpga. Sourced by the dispatcher; expects $TOOL_DIR set.
 
-# --- Workspace root: parent of the tool dir, or $ZFPGA_WS. Must be a west
-# workspace (has a zephyr/ dir). ---
-WS=${ZFPGA_WS:-$(dirname "$TOOL_DIR")}
+# --- Workspace root: $ZFPGA_WS, else the nearest ancestor of the tool dir that
+# has a zephyr/ dir. That covers both "zfpga/ next to zephyr/" and zfpga used as
+# a submodule nested inside an app repo (ws/app-repo/tools/zfpga). ---
+if [ -n "${ZFPGA_WS:-}" ]; then
+    WS=$ZFPGA_WS
+else
+    WS=$(dirname "$TOOL_DIR")
+    for _d in "$WS" "$(dirname "$WS")" "$(dirname "$(dirname "$WS")")" "$(dirname "$(dirname "$(dirname "$WS")")")"; do
+        [ -d "$_d/zephyr" ] && { WS=$_d; break; }
+    done
+    unset _d
+fi
 if [ ! -d "$WS/zephyr" ]; then
     echo "zfpga: no zephyr/ under workspace '$WS' -- set ZFPGA_WS to your west workspace root." >&2
     exit 1
+fi
+
+# --- Bitstream drop folders: $ZFPGA_BITSTREAMS, else <superproject>/bitstreams
+# when zfpga is a submodule whose parent repo has one, else $WS/bitstreams. ---
+SUPER=$(git -C "$TOOL_DIR" rev-parse --show-superproject-working-tree 2>/dev/null || true)
+if [ -n "${ZFPGA_BITSTREAMS:-}" ]; then
+    BS_DIR=$ZFPGA_BITSTREAMS
+elif [ -n "$SUPER" ] && [ -d "$SUPER/bitstreams" ]; then
+    BS_DIR=$SUPER/bitstreams
+else
+    BS_DIR=$WS/bitstreams
 fi
 
 BENCH_CONF="$WS/.flash.local"           # per-bench, git-ignored (see zfpga init)
@@ -40,11 +60,11 @@ load_bench() {
     MNT=${MNT:-/mnt}
 }
 
-# resolve_sample <arg> -- set SAMPLE (name, keys bitstreams/<name>/) and
+# resolve_sample <arg> -- set SAMPLE (name, keys $BS_DIR/<name>/) and
 # SAMPLE_DIR (app dir, relative to $WS when inside it). <arg> is either:
 #   - a path (contains '/'): taken relative to $PWD, else to $WS; the name is
 #     its basename, e.g. modules/lib/libiio/zephyr/samples/iiod -> iiod.
-#   - a bare name: the path recorded in bitstreams/<name>/.sample by
+#   - a bare name: the path recorded in $BS_DIR/<name>/.sample by
 #     'zfpga new', else zephyr/samples/<name>.
 resolve_sample() {
     local arg=${1%/} abs=""
@@ -55,9 +75,17 @@ resolve_sample() {
         SAMPLE=$(basename "$abs")
     else
         SAMPLE=$arg
-        if [ -f "$WS/bitstreams/$SAMPLE/.sample" ]; then
-            abs=$(cat "$WS/bitstreams/$SAMPLE/.sample")
-            [[ $abs == /* ]] || abs="$WS/$abs"
+        if [ -f "$BS_DIR/$SAMPLE/.sample" ]; then
+            abs=$(cat "$BS_DIR/$SAMPLE/.sample")
+            if [[ $abs != /* ]]; then
+                # relative to the workspace, else to the superproject (so a repo
+                # can record "app" without knowing its checkout dir name)
+                if [ ! -e "$WS/$abs" ] && [ -n "$SUPER" ] && [ -e "$SUPER/$abs" ]; then
+                    abs="$SUPER/$abs"
+                else
+                    abs="$WS/$abs"
+                fi
+            fi
         else
             abs="$WS/zephyr/samples/$SAMPLE"
         fi

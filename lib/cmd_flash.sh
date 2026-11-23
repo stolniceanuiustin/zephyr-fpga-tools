@@ -41,7 +41,7 @@ cmd_flash() {
     sample=$SAMPLE
     local sdir="$SAMPLE_DIR"
     [[ $sdir == /* ]] || sdir="$WS/$sdir"
-    local bdir="$WS/bitstreams/$sample"
+    local bdir="$BS_DIR/$sample"
     [ -d "$sdir" ] || die "sample not found: $sdir (pass its path, or 'zfpga new <board> $sample <path>')"
     [ -n "$NO_BIT" ] || [ -d "$bdir" ] || die "bitstream folder not found: $bdir (run 'zfpga new', or -n for no bitstream)"
 
